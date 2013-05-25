@@ -40,6 +40,7 @@ setPos(coldWire, coldWire.circle.x-(coldWire.width/2), coldWire.left + coldWire.
 
 var bulb, intHandle;
 var flow = {x:bottomL.right, y:bottomL.top, xInc:-2, yInc:0, step:2, color:"red"};
+var tmpBool = true;
 
 canvas.addEventListener("click", clickRespond, false);
 
@@ -66,8 +67,6 @@ function drawAll(){
 
     //bottom-left
     dRect(bottomL.left, bottomL.top, bottomL.width, bottomL.height, "DarkGrey");
-
-    drawSwitchCircle();
 
     //right rect
     dRect(rightR.left, rightR.top, rightR.width, rightR.height, "DarkGrey");
@@ -98,6 +97,8 @@ function drawAll(){
     ctx.closePath();
     //wire
     dRect(coldWire.left, coldWire.top, coldWire.width, coldWire.height, coldWire.color);
+
+    drawSwitchCircle();
 
     bulb = new Image();
     bulb.onload = function() {
@@ -134,11 +135,15 @@ function aniArm(){
 }
 
 function aniBottomL(){
+    if(tmpBool && flow.x < cSwitch.left){
+        drawArm();
+        drawSwitchCircle();
+        tmpBool = false;
+    }
+
     dRect(flow.x - flow.step, flow.y, flow.step, bottomL.height, flow.color)
     flow.x -= flow.step;
 
-    drawArm();
-    drawSwitchCircle();
     if(flow.x <= bottomL.left-leftR.width){
         clearInterval(intHandle);
         intHandle = setInterval(aniLeftR, 20);
@@ -185,18 +190,22 @@ function aniRightR(){
 
     if(flow.y+flow.step >= bottomR.bottom){
         flow.y = bottomR.top;
+        tmpBool = true;
         clearInterval(intHandle);
         intHandle = setInterval(aniBottomR, 20);
     }
 }
 
 function aniBottomR(){
+    if(tmpBool && flow.x < cSwitch.right){
+        drawSwitchCircle();
+        tmpBool = false;
+    }
     dRect(flow.x - flow.step, flow.y, flow.step, bottomR.height, flow.color)
     flow.x -= flow.step;
 
-    drawArm();
-    drawSwitchCircle();
     if(flow.x <= bottomR.left){
+        drawArm();
         clearInterval(intHandle);
 //        intHandle = setInterval(aniLeftR, 20);
     }
