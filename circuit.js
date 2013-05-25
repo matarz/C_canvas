@@ -38,7 +38,8 @@ var coldWire = {color:"blue", width:hotWire.width, height:hotWire.height};
 coldWire.circle = {radius:hotWire.circle.radius, x:cSwitch.center.x+halfR, y:hotWire.circle.y};
 setPos(coldWire, coldWire.circle.x-(coldWire.width/2), coldWire.left + coldWire.width, coldWire.circle.y+(coldWire.circle.radius/2), coldWire.top + coldWire.height);
 
-var bulb;
+var bulb, intHandle;
+var flow = {x:bottomL.right, y:bottomL.top, xInc:-2, yInc:0, step:2, color:"red"};
 
 canvas.addEventListener("click", clickRespond, false);
 
@@ -105,8 +106,6 @@ function drawAll(){
 }
 
 function drawArm(){
-    //switch arm
-
     ctx.save();
     ctx.translate(switchArm.x,switchArm.y)   //make switch arm xy center of rotation
     ctx.rotate(switchArm.angle * Math.PI/180);             //rotate view
@@ -118,15 +117,51 @@ function drawArm(){
     ctx.restore();
 }
 
-var angle = -30, intHandle;
 function aniArm(){
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     drawAll();
     ++switchArm.angle;
     drawArm();
-    if(switchArm.angle>-10)
+    if(switchArm.angle>-10){
         clearInterval(intHandle);
+        intHandle = setInterval(aniBottomL, 20);
+    }
 }
+
+function aniBottomL(){
+    dRect(flow.x - flow.step, flow.y, flow.step, bottomL.height, flow.color)
+    flow.x -= flow.step;
+
+    drawArm();
+    if(flow.x <= bottomL.left-leftR.width){
+        clearInterval(intHandle);
+        intHandle = setInterval(aniLeftR, 20);
+    }
+}
+
+function aniLeftR(){
+    dRect(flow.x, flow.y - flow.step, leftR.width , flow.step, flow.color)
+    flow.y -= flow.step;
+
+    if(flow.y <= leftR.top){
+        clearInterval(intHandle);
+        intHandle = setInterval(aniTopL, 20);
+    }
+}
+
+function aniTopL(){
+    dRect(flow.x + flow.step, flow.y, flow.step, topL.height, flow.color)
+    flow.x += flow.step;
+
+    if(flow.x >= topL.right){
+        clearInterval(intHandle);
+        flow.x = topR.left;
+        flow.color = "blue";
+        bulb.src = "bulbOn.jpg";
+        //intHandle = setInterval(aniTopR, 20);
+    }
+}
+
 
 function clickRespond(e){
     var p = clickPos(e);
@@ -136,7 +171,6 @@ function clickRespond(e){
     if (cSwitch.status == "off"){
         intHandle = setInterval(aniArm, 20);
         //run turnOn
-
     }else{
         //turn off
     }
