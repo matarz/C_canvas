@@ -50,6 +50,16 @@ function draw(){
     drawArm();
 }
 
+
+function drawSwitchCircle(){
+    //circle
+    ctx.beginPath();
+    ctx.arc(cSwitch.center.x, cSwitch.center.y, cSwitch.radius, 0, Math.PI * 2, true);
+    ctx.lineWidth = cSwitch.lineWidth;
+    ctx.stroke();
+    ctx.closePath();
+}
+
 function drawAll(){
    //bottom-right
     dRect(bottomR.left, bottomR.top, bottomR.width, bottomR.height, "DarkGrey");
@@ -57,12 +67,7 @@ function drawAll(){
     //bottom-left
     dRect(bottomL.left, bottomL.top, bottomL.width, bottomL.height, "DarkGrey");
 
-    //circle
-    ctx.beginPath();
-    ctx.arc(cSwitch.center.x, cSwitch.center.y, cSwitch.radius, 0, Math.PI * 2, true);
-    ctx.lineWidth = cSwitch.lineWidth;
-    ctx.stroke();
-    ctx.closePath();
+    drawSwitchCircle();
 
     //right rect
     dRect(rightR.left, rightR.top, rightR.width, rightR.height, "DarkGrey");
@@ -133,6 +138,7 @@ function aniBottomL(){
     flow.x -= flow.step;
 
     drawArm();
+    drawSwitchCircle();
     if(flow.x <= bottomL.left-leftR.width){
         clearInterval(intHandle);
         intHandle = setInterval(aniLeftR, 20);
@@ -155,12 +161,47 @@ function aniTopL(){
 
     if(flow.x >= topL.right){
         clearInterval(intHandle);
-        flow.x = topR.left;
+        flow.x = topR.left-flow.step;
         flow.color = "blue";
         bulb.src = "bulbOn.jpg";
-        //intHandle = setInterval(aniTopR, 20);
+        intHandle = setInterval(aniTopR, 20);
     }
 }
+
+function aniTopR(){
+    dRect(flow.x + flow.step, flow.y, flow.step, topR.height, flow.color)
+    flow.x += flow.step;
+
+    if(flow.x+flow.step >= topR.right + rightR.width){
+        flow.x = rightR.left;
+        clearInterval(intHandle);
+        intHandle = setInterval(aniRightR, 20);
+    }
+}
+
+function aniRightR(){
+    dRect(flow.x, flow.y + flow.step, rightR.width , flow.step, flow.color)
+    flow.y += flow.step;
+
+    if(flow.y+flow.step >= bottomR.bottom){
+        flow.y = bottomR.top;
+        clearInterval(intHandle);
+        intHandle = setInterval(aniBottomR, 20);
+    }
+}
+
+function aniBottomR(){
+    dRect(flow.x - flow.step, flow.y, flow.step, bottomR.height, flow.color)
+    flow.x -= flow.step;
+
+    drawArm();
+    drawSwitchCircle();
+    if(flow.x <= bottomR.left){
+        clearInterval(intHandle);
+//        intHandle = setInterval(aniLeftR, 20);
+    }
+}
+
 
 
 function clickRespond(e){
