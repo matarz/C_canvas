@@ -6,4 +6,5 @@ canvas {
     display: block;
     width: 450px;
     border: 1px dashed black;
+	-webkit-tap-highlight-color: transparent;
 }

@@ -1,14 +1,17 @@
 var canvas = document.getElementById('drawArea');
 var ctx = canvas.getContext('2d');
 
-//setting variables
+//setting variables (canW = canH = 450)
 var colors = {off:"rgba(200,200,200,1)", hot:"rgba(255,0,0,.6)", cold:"rgba(0,0,255,.6)", stroke:"rgba(0,0,0,.8)"};
 var cSwitch = {radius:30, lineWidth:4, status:"off"};
-cSwitch.sideWiresLen = cSwitch.radius/2 + 2
+cSwitch.sideWiresLen = cSwitch.radius/2 + 2;
 cSwitch.center = {x:canvas.width/2, y:canvas.height-80};
 setPos(cSwitch, cSwitch.center.x - cSwitch.radius, cSwitch.center.x + cSwitch.radius, cSwitch.center.y - cSwitch.radius, cSwitch.center.y + cSwitch.radius);
 
-var bottomR = {width:130, height:10};
+var corner = {radius:30, lineWidth:10};
+
+//noinspection JSSuspiciousNameCombination
+var bottomR = {width:76, height:corner.lineWidth};
 var hw = cSwitch.lineWidth/2 - cSwitch.sideWiresLen;
 setPos(bottomR, cSwitch.right + hw, cSwitch.right + hw + bottomR.width, cSwitch.center.y-(bottomR.height/2), cSwitch.center.y+(bottomR.height/2));
 
@@ -17,17 +20,20 @@ setPos(bottomL, cSwitch.left - (hw + bottomL.width), cSwitch.left - hw, cSwitch.
 
 var switchArm = {angle:-30, x:bottomL.right-3, y:bottomL.top+2, width:bottomR.left-bottomL.right, height:4};
 
-var rightR = {width:bottomR.height, height:270};
-setPos(rightR, bottomR.right, bottomR.right+rightR.width, bottomR.bottom-rightR.height, bottomR.bottom);
+//noinspection JSSuspiciousNameCombination
+var rightR = {width:bottomR.height, height:180};
+setPos(rightR, bottomR.right+corner.radius, bottomR.right+rightR.width+corner.radius, bottomR.top-rightR.height-corner.radius, bottomR.top-corner.radius);
 
+//noinspection JSSuspiciousNameCombination
 var leftR = {width:bottomR.height, height:rightR.height};
-setPos(leftR, bottomL.left-leftR.width, bottomL.left, bottomL.bottom-leftR.height, bottomL.bottom);
+setPos(leftR, bottomL.left-leftR.width-corner.radius, bottomL.left-corner.radius, rightR.top, rightR.bottom);
 
-var topR = {width:140, height:bottomR.height};
-setPos(topR, rightR.left - topR.width, rightR.left, rightR.top, rightR.top+topR.height);
+var topL = {width:((bottomR.right-bottomL.left)-10)/2, height:bottomR.height};
+setPos(topL, bottomL.left, bottomL.left+topL.width, leftR.top-corner.radius-topL.height, leftR.top+topL.height-corner.radius);
 
-var topL = {width:topR.width, height:bottomR.height};
-setPos(topL, leftR.right, leftR.right+topL.width, leftR.top, leftR.top+topL.height);
+var topR = {width:topL.width, height:bottomR.height};
+setPos(topR, rightR.left - topR.width - corner.radius, rightR.left - corner.radius, topL.top, topL.bottom);
+
 
 //Hot wire
 var halfR = cSwitch.radius/2;
@@ -41,7 +47,8 @@ coldWire.circle = {radius:hotWire.circle.radius, x:cSwitch.center.x+halfR, y:hot
 setPos(coldWire, coldWire.circle.x-(coldWire.width/2), coldWire.left + coldWire.width, coldWire.circle.y+(coldWire.circle.radius/2), coldWire.top + coldWire.height);
 
 var bulb, intHandle;
-var flow = {x:bottomL.right, y:bottomL.top, xInc:-2, yInc:0, step:2, color:colors.hot, passedCircle:true};
+var flow = {x:bottomL.right, y:bottomL.top, step:4, callSpeed:20, color:colors.hot, passedCircle:true};
+flow.corner = {x:0, y:0, r:0, sAngle:0, step:0.05, maxAngle:0, color:0};
 
 canvas.addEventListener("click", clickRespond, false);
 
@@ -64,24 +71,29 @@ function drawSwitchCircle(){
     ctx.closePath();
 }
 
+function dCorner(x, y, r, sAngle, eAngle, color){
+    ctx.beginPath();
+    ctx.arc(x, y, r, sAngle, eAngle, false);
+    ctx.lineWidth = corner.lineWidth;
+    ctx.strokeStyle = color;
+    ctx.stroke();
+    ctx.closePath();
+}
+
 function drawAll(){
-   //bottom-right
-    dRect(bottomR.left, bottomR.top, bottomR.width, bottomR.height, colors.off);
+   //sides, tops, and bottoms
+    dRect(bottomR.left, bottomR.top, bottomR.width, bottomR.height, colors.off);  //bottom-right
+    dRect(bottomL.left, bottomL.top, bottomL.width, bottomL.height, colors.off);  //bottom-left
+    dRect(rightR.left, rightR.top, rightR.width, rightR.height, colors.off);      //right rect
+    dRect(leftR.left, leftR.top, leftR.width, leftR.height, colors.off);          //left rect
+    dRect(topR.left, topR.top, topR.width, topR.height, colors.off);              //top-right
+    dRect(topL.left, topL.top, topL.width, topL.height, colors.off);              //top-Left
 
-    //bottom-left
-    dRect(bottomL.left, bottomL.top, bottomL.width, bottomL.height, colors.off);
-
-    //right rect
-    dRect(rightR.left, rightR.top, rightR.width, rightR.height, colors.off);
-
-    //left rect
-    dRect(leftR.left, leftR.top, leftR.width, leftR.height, colors.off);
-
-    //top-right
-    dRect(topR.left, topR.top, topR.width, topR.height, colors.off);
-
-    //top-Left
-    dRect(topL.left, topL.top, topL.width, topL.height, colors.off);
+	//corners
+    dCorner(bottomR.right, rightR.bottom, corner.radius+corner.lineWidth/2, 0, Math.PI*.5, colors.off);     //corner bottom-right
+    dCorner(bottomL.left, leftR.bottom, corner.radius+corner.lineWidth/2, Math.PI*.5, Math.PI, colors.off); //corner bottom-left
+    dCorner(topL.left, leftR.top, corner.radius+corner.lineWidth/2, Math.PI * 1, Math.PI*1.5, colors.off);      //corner top-left
+    dCorner(topR.right, rightR.top, corner.radius+corner.lineWidth/2, Math.PI*1.5, 0, colors.off);          //corner top-right
 
     //hot wire circle
     ctx.beginPath();
@@ -89,8 +101,7 @@ function drawAll(){
     ctx.fillStyle = hotWire.color;
     ctx.fill();
     ctx.closePath();
-    //wire
-    dRect(hotWire.left, hotWire.top, hotWire.width, hotWire.height, hotWire.color);
+    dRect(hotWire.left, hotWire.top, hotWire.width, hotWire.height, hotWire.color);  //wire
 
     //cold wire circle
     ctx.beginPath();
@@ -98,11 +109,9 @@ function drawAll(){
     ctx.fillStyle = coldWire.color;
     ctx.fill();
     ctx.closePath();
-    //wire
-    dRect(coldWire.left, coldWire.top, coldWire.width, coldWire.height, coldWire.color);
+    dRect(coldWire.left, coldWire.top, coldWire.width, coldWire.height, coldWire.color);  //wire
 
     drawSwitchCircle();
-
 }
 
 function drawBulb(){
@@ -119,14 +128,15 @@ function drawBulb(){
 
 function drawArm(){
     ctx.save();
-    ctx.translate(switchArm.x,switchArm.y)   //make switch arm xy center of rotation
+    ctx.translate(switchArm.x,switchArm.y);   //make switch arm xy center of rotation
     ctx.rotate(switchArm.angle * Math.PI/180);             //rotate view
-    ctx.translate(-switchArm.x,-switchArm.y) //return center to normal
+    ctx.translate(-switchArm.x,-switchArm.y); //return center to normal
     ctx.beginPath();
     ctx.fillStyle = colors.stroke;
     ctx.fillRect(switchArm.x, switchArm.y, switchArm.width+6, switchArm.height);
     ctx.closePath();
     ctx.restore();
+    //alert(switchArm.x +" "+ switchArm.y +" "+ switchArm.angle +" "+ switchArm.width +" "+ switchArm.height +" "+ colors.stroke);
 }
 
 function aniArm(){
@@ -136,9 +146,10 @@ function aniArm(){
     drawArm();
     if(switchArm.angle>-10){
         clearInterval(intHandle);
-        intHandle = setInterval(aniBottomL, 20);
+        intHandle = setInterval(aniBottomL, flow.callSpeed);
     }
 }
+
 
 function aniBottomL(){
     if(flow.passedCircle && flow.x < cSwitch.left){
@@ -147,72 +158,112 @@ function aniBottomL(){
         flow.passedCircle = false;
     }
 
-    dRect(flow.x - flow.step, flow.y, flow.step, bottomL.height, flow.color)
+    if(flow.x - flow.step < bottomL.left)
+		flow.x = bottomL.left + flow.step;
+		
+	dRect(flow.x - flow.step, flow.y, flow.step, bottomL.height, flow.color);
     flow.x -= flow.step;
 
-    if(flow.x <= bottomL.left-leftR.width){
+    if(flow.x <= bottomL.left){
+        flow.corner = {x:bottomL.left, y:leftR.bottom, r:corner.radius+corner.lineWidth/2, sAngle:0.5, step:0.05,
+                       maxAngle:1.0, color:colors.hot, nextFunc:aniLeftR};
+        flow.x = leftR.left;
+        flow.y = leftR.bottom;
         clearInterval(intHandle);
-        intHandle = setInterval(aniLeftR, 20);
+        intHandle = setInterval(aniCorner, flow.callSpeed);
     }
 }
 
+
 function aniLeftR(){
-    dRect(flow.x, flow.y - flow.step, leftR.width , flow.step, flow.color)
+	if(flow.y - flow.step < leftR.top)
+		flow.y = leftR.top + flow.step;
+	
+	dRect(flow.x, flow.y - flow.step, leftR.width , flow.step, flow.color);
     flow.y -= flow.step;
 
     if(flow.y <= leftR.top){
+        flow.corner = {x:topL.left, y:leftR.top, r:corner.radius+corner.lineWidth/2, sAngle:1.0, step:0.05,
+                       maxAngle:1.5, color:colors.hot, nextFunc:aniTop};
+        flow.x = topL.left;
+        flow.y = topL.top;
         clearInterval(intHandle);
-        intHandle = setInterval(aniTopL, 20);
+        intHandle = setInterval(aniCorner, flow.callSpeed);
     }
 }
 
-function aniTopL(){
-    dRect(flow.x + flow.step, flow.y, flow.step, topL.height, flow.color)
+
+function aniTop(){
+    if(flow.x + flow.step > topL.right && flow.color == colors.hot)
+		flow.x = topL.right - flow.step;
+
+    if(flow.x + flow.step > topR.right)
+        flow.x = topR.right - flow.step;
+
+    dRect(flow.x, flow.y, flow.step, topL.height, flow.color);
     flow.x += flow.step;
 
-    if(flow.x >= topL.right){
-        clearInterval(intHandle);
-        flow.x = topR.left-flow.step;
-        flow.color = colors.cold;
+    if(flow.x == topL.right){
         bulb.src = "bulbOn.jpg";
-        intHandle = setInterval(aniTopR, 20);
+        flow.x = topR.left;
+        flow.color = colors.cold;
     }
-}
 
-function aniTopR(){
-    dRect(flow.x + flow.step, flow.y, flow.step, topR.height, flow.color)
-    flow.x += flow.step;
+    if(flow.x >= topR.right){
+        flow.corner = {x:topR.right, y:rightR.top, r:corner.radius+corner.lineWidth/2, sAngle:1.5, step:0.05,
+                       maxAngle:2.0, color:colors.cold, nextFunc:aniRightR};
 
-    if(flow.x+flow.step >= topR.right + rightR.width){
         flow.x = rightR.left;
+        flow.y = rightR.top;
+        flow.color = colors.cold;
         clearInterval(intHandle);
-        intHandle = setInterval(aniRightR, 20);
+        intHandle = setInterval(aniCorner, flow.callSpeed);
     }
 }
 
 function aniRightR(){
-    dRect(flow.x, flow.y + flow.step, rightR.width , flow.step, flow.color)
+	if(flow.y + flow.step > rightR.bottom)
+		flow.y = rightR.bottom - flow.step;    
+	
+	dRect(flow.x, flow.y, rightR.width , flow.step, flow.color);
     flow.y += flow.step;
 
-    if(flow.y+flow.step >= bottomR.bottom){
+    if(flow.y >= rightR.bottom){
+        flow.corner = {x:bottomR.right, y:rightR.bottom, r:corner.radius+corner.lineWidth/2, sAngle:0, step:0.05,
+                       maxAngle:0.5, color:colors.cold, nextFunc:aniBottomR};
+        flow.x = bottomR.right;
         flow.y = bottomR.top;
         flow.passedCircle = true;
         clearInterval(intHandle);
-        intHandle = setInterval(aniBottomR, 20);
+        intHandle = setInterval(aniCorner, flow.callSpeed);
     }
 }
 
 function aniBottomR(){
-    if(flow.passedCircle && flow.x < cSwitch.right){
+    if(flow.x - flow.step < bottomR.left)
+		flow.x = bottomR.left + flow.step;    
+	
+	if(flow.passedCircle && flow.x < cSwitch.right){
         drawSwitchCircle();
         flow.passedCircle = false;
     }
-    dRect(flow.x - flow.step, flow.y, flow.step, bottomR.height, flow.color)
+    dRect(flow.x - flow.step, flow.y, flow.step, bottomR.height, flow.color);
     flow.x -= flow.step;
 
     if(flow.x <= bottomR.left){
         drawArm();
         clearInterval(intHandle);
+    }
+}
+
+function aniCorner(){
+    dCorner(flow.corner.x, flow.corner.y, flow.corner.r, Math.PI * flow.corner.sAngle, Math.PI * Number((flow.corner.sAngle + flow.corner.step).toFixed(2)), flow.corner.color);
+
+    flow.corner.sAngle = Number((flow.corner.sAngle + flow.corner.step).toFixed(2));
+
+    if(flow.corner.sAngle + flow.corner.step > flow.corner.maxAngle){
+        clearInterval(intHandle);
+        intHandle = setInterval(flow.corner.nextFunc, flow.callSpeed);
     }
 }
 
@@ -225,7 +276,7 @@ function clickRespond(e){
 
     if (cSwitch.status == "off"){
         cSwitch.status = "on";
-        intHandle = setInterval(aniArm, 20);
+        intHandle = setInterval(aniArm, flow.callSpeed);
     }else{  //turn off
         clearInterval(intHandle);
         ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -233,9 +284,6 @@ function clickRespond(e){
         switchArm.angle = -30;
         flow.x = bottomL.right;
         flow.y = bottomL.top;
-        flow.xInc = -2;
-        flow.yInc = 0;
-        flow.step = 2;
         flow.color = colors.hot;
         flow.passedCircle = true;
 
