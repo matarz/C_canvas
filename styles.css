@@ -5,4 +5,5 @@ canvas {
     margin-right: auto;
     display: block;
     width: 450px;
+    border: 1px dashed black;
 }
