@@ -1,8 +1,28 @@
+//todo preload images
+//todo relative sizes
+//todo remove can borders
 
-var	canvas = document.getElementById('drawArea');
-var	ctx = canvas.getContext('2d');
 
-//var canvas, ctx;
+
+window.onload = draw;
+
+function draw() {
+  var ctx = (a canvas context);
+  ctx.canvas.width  = window.innerWidth;
+  ctx.canvas.height = window.innerHeight;
+  //...drawing code...
+}
+
+
+html, body {
+  width:  100%;
+  height: 100%;
+  margin: 0px;
+}
+
+
+
+var canvas, ctx;
 
 //setting variables (canW = canH = 450)
 var colors = {off:"rgba(200,200,200,1)", hot:"rgba(255,0,0,.6)", cold:"rgba(0,0,255,.6)", stroke:"rgba(0,0,0,.8)"};
@@ -55,10 +75,10 @@ flow.corner = {x:0, y:0, r:0, sAngle:0, step:0.05, maxAngle:0, color:0};
 
 canvas.addEventListener("click", clickRespond, false);
 
-window.onload = draw;
+window.onload = init;
 
 
-/* function init(){
+function init(){
 	canvas = document.getElementById('drawArea');
 	ctx = canvas.getContext('2d');
 	ctx.canvas.width  = window.innerWidth;
@@ -69,7 +89,7 @@ window.onload = draw;
 	preloadBulb.src = "bulbOn.jpg";  
   
 	draw();
-} */
+}
 
 function draw(){
     drawAll();
@@ -341,8 +361,3 @@ function clickPos(e){
 
     return pos;
 }
-
-
-//todo preload images
-//todo relative sizes
-//todo remove can borders
